@@ -8,34 +8,32 @@ import {
   Zap, 
   Layers, 
   BookOpen, 
-  Code,
-  ShieldCheck
+  Code
 } from "lucide-react";
 
 export const LandingPage = ({ onGetStarted, onTryQuery }) => {
-  const [demoInput, setDemoInput] = useState("Show all students from the CSE department");
-  const [demoGenerated, setDemoGenerated] = useState(false);
+  const [demoInput, setDemoInput] = useState("Show all records where cgpa > 8.5");
 
   return (
-    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "20px 0" }}>
+    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "10px 0" }}>
       {/* Top Banner Navigation */}
       <header style={{ 
         display: "flex", 
         justifyContent: "space-between", 
         alignItems: "center", 
         padding: "16px 32px",
-        background: "rgba(255, 255, 255, 0.8)",
+        background: "rgba(255, 255, 255, 0.9)",
         backdropFilter: "blur(12px)",
-        borderRadius: "24px",
-        border: "1px solid rgba(226, 232, 240, 0.8)",
-        boxShadow: "0 4px 20px rgba(0,0,0,0.03)",
+        borderRadius: "var(--radius-xl)",
+        border: "1px solid var(--card-border)",
+        boxShadow: "var(--card-shadow)",
         marginBottom: "40px"
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
           <div style={{ 
             width: "38px", 
             height: "38px", 
-            background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", 
+            background: "linear-gradient(135deg, var(--primary-terracotta) 0%, var(--primary-terracotta-hover) 100%)", 
             borderRadius: "10px", 
             display: "flex", 
             alignItems: "center", 
@@ -44,16 +42,16 @@ export const LandingPage = ({ onGetStarted, onTryQuery }) => {
           }}>
             <Database size={20} />
           </div>
-          <span style={{ fontWeight: 800, fontSize: "1.15rem", letterSpacing: "-0.5px", color: "#0f172a" }}>
-            NEO ASSIST
+          <span className="brand-nura" style={{ fontSize: "1.25rem", color: "var(--text-espresso)" }}>
+            NEOASSIST
           </span>
         </div>
 
-        <nav style={{ display: "flex", gap: "28px", fontSize: "0.92rem", fontWeight: 600, color: "#64748b" }}>
+        <nav style={{ display: "flex", gap: "28px", fontSize: "0.92rem", fontWeight: 700, color: "var(--text-slate-taupe)" }}>
           <a href="#features" style={{ color: "inherit", textDecoration: "none" }}>Features</a>
           <a href="#how" style={{ color: "inherit", textDecoration: "none" }}>How It Works</a>
           <a href="#schema" style={{ color: "inherit", textDecoration: "none" }}>Databases</a>
-          <a href="#pricing" style={{ color: "inherit", textDecoration: "none" }}>Use Cases</a>
+          <a href="#sheets" style={{ color: "inherit", textDecoration: "none" }}>Google Sheets Import</a>
         </nav>
 
         <button className="btn-primary" onClick={onGetStarted}>
@@ -67,7 +65,7 @@ export const LandingPage = ({ onGetStarted, onTryQuery }) => {
         gridTemplateColumns: "1.1fr 0.9fr", 
         gap: "40px", 
         alignItems: "center",
-        padding: "30px 20px 60px 20px" 
+        padding: "20px 10px 50px 10px" 
       }}>
         <div>
           <div style={{ 
@@ -75,10 +73,10 @@ export const LandingPage = ({ onGetStarted, onTryQuery }) => {
             alignItems: "center", 
             gap: "8px", 
             padding: "6px 14px", 
-            background: "#eff6ff", 
+            background: "var(--primary-terracotta-light)", 
             borderRadius: "20px",
-            color: "#2563eb",
-            fontWeight: 700,
+            color: "var(--primary-terracotta)",
+            fontWeight: 800,
             fontSize: "0.82rem",
             marginBottom: "20px"
           }}>
@@ -90,12 +88,12 @@ export const LandingPage = ({ onGetStarted, onTryQuery }) => {
             fontWeight: 800, 
             lineHeight: 1.15, 
             letterSpacing: "-1.5px",
-            color: "#0f172a",
+            color: "var(--text-espresso)",
             marginBottom: "20px" 
           }}>
             Natural Language <br />
             <span style={{ 
-              background: "linear-gradient(135deg, #2563eb 0%, #38bdf8 100%)", 
+              background: "linear-gradient(135deg, var(--primary-terracotta) 0%, var(--accent-sand) 100%)", 
               WebkitBackgroundClip: "text", 
               WebkitTextFillColor: "transparent" 
             }}>
@@ -103,7 +101,7 @@ export const LandingPage = ({ onGetStarted, onTryQuery }) => {
             </span>
           </h1>
 
-          <p style={{ fontSize: "1.15rem", color: "#475569", lineHeight: 1.6, marginBottom: "32px", maxWidth: "520px" }}>
+          <p style={{ fontSize: "1.15rem", color: "var(--text-slate-taupe)", lineHeight: 1.6, marginBottom: "32px", maxWidth: "520px" }}>
             Turn your everyday natural English questions into optimized, production-grade SQL queries and visual dashboards. No SQL required — just ask your data.
           </p>
 
@@ -114,150 +112,127 @@ export const LandingPage = ({ onGetStarted, onTryQuery }) => {
             <button 
               className="btn-secondary" 
               style={{ padding: "14px 24px", fontSize: "1.05rem" }}
-              onClick={() => {
-                onTryQuery("Show all students from the CSE department");
-              }}
+              onClick={() => onTryQuery(demoInput)}
             >
-              <Play size={18} color="#2563eb" /> Run Demo Query
+              <Play size={18} color="var(--primary-terracotta)" /> Run Query Studio
             </button>
           </div>
 
           {/* Highlights */}
-          <div style={{ display: "flex", gap: "24px", marginTop: "40px", color: "#64748b", fontSize: "0.88rem" }}>
+          <div style={{ display: "flex", gap: "24px", marginTop: "40px", color: "var(--text-slate-taupe)", fontSize: "0.88rem", fontWeight: 600 }}>
             <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <CheckCircle size={16} color="#16a34a" /> Instant Execution
+              <CheckCircle size={16} color="var(--accent-sage)" /> Instant In-Memory SQL
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <CheckCircle size={16} color="#16a34a" /> Voice Dictation Enabled
+              <CheckCircle size={16} color="var(--accent-sage)" /> Google Sheets Ingestion
             </span>
             <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-              <CheckCircle size={16} color="#16a34a" /> In-Memory Database
+              <CheckCircle size={16} color="var(--accent-sage)" /> Voice Command Microphone
             </span>
           </div>
         </div>
 
-        {/* Hero Interactive 3D Graphic & Preview Card */}
+        {/* Hero Preview Card */}
         <div style={{ position: "relative" }}>
-          {/* Pastel 3D Cylinders Graphic Simulation */}
-          <div style={{ 
-            position: "absolute", 
-            top: "-30px", 
-            right: "20px", 
-            width: "120px", 
-            height: "120px", 
-            background: "radial-gradient(circle, #38bdf8 0%, #2563eb 80%)", 
-            borderRadius: "50%", 
-            filter: "blur(40px)", 
-            opacity: 0.35, 
-            zIndex: 0 
-          }}></div>
-
           <div className="neo-card" style={{ 
             position: "relative", 
             zIndex: 1, 
-            border: "1px solid rgba(226, 232, 240, 0.9)", 
-            boxShadow: "0 25px 50px -12px rgba(15, 23, 42, 0.12)",
-            background: "#ffffff",
+            background: "#FFFFFF",
             padding: "28px"
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "#22c55e" }}></span>
-                <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "#1e293b" }}>students_db (active)</span>
+                <span style={{ width: "10px", height: "10px", borderRadius: "50%", background: "var(--accent-sage)" }}></span>
+                <span style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--text-espresso)" }}>students_db (active)</span>
               </div>
-              <span className="badge badge-yellow">Interactive Preview</span>
+              <span className="badge badge-sand">Interactive Preview</span>
             </div>
 
-            {/* Input simulation */}
             <div style={{ 
-              background: "#f8fafc", 
-              border: "1px solid #e2e8f0", 
-              borderRadius: "14px", 
+              background: "var(--bg-linen)", 
+              border: "1px solid var(--card-border)", 
+              borderRadius: "var(--radius-md)", 
               padding: "14px 18px", 
               marginBottom: "16px" 
             }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 800, color: "var(--text-slate-taupe)", textTransform: "uppercase", display: "block", marginBottom: "6px" }}>
                 Natural Language Question:
               </label>
               <input
                 type="text"
                 value={demoInput}
                 onChange={(e) => setDemoInput(e.target.value)}
-                style={{ width: "100%", background: "transparent", border: "none", outline: "none", fontSize: "0.95rem", fontWeight: 600, color: "#0f172a" }}
+                style={{ width: "100%", background: "transparent", border: "none", outline: "none", fontSize: "0.95rem", fontWeight: 700, color: "var(--text-espresso)" }}
               />
             </div>
 
             <button 
               className="btn-primary" 
               style={{ width: "100%", justifyContent: "center", marginBottom: "20px" }}
-              onClick={() => {
-                setDemoGenerated(true);
-                onTryQuery(demoInput);
-              }}
+              onClick={() => onTryQuery(demoInput)}
             >
-              <Sparkles size={16} /> Convert to SQL & Execute
+              <Sparkles size={16} /> Convert to SQL & Run
             </button>
 
-            {/* Generated SQL snippet preview */}
             <div className="code-box">
               <div className="code-box-header">
                 <span>GENERATED SQL</span>
                 <span>ANSI SQLite</span>
               </div>
               <div className="code-box-content">
-                <span style={{ color: "#38bdf8" }}>SELECT</span> * <br />
-                <span style={{ color: "#38bdf8" }}>FROM</span> students <br />
-                <span style={{ color: "#38bdf8" }}>WHERE</span> department = <span style={{ color: "#fef08a" }}>&apos;CSE&apos;</span>;
+                <span style={{ color: "var(--primary-terracotta)" }}>SELECT</span> * <br />
+                <span style={{ color: "var(--primary-terracotta)" }}>FROM</span> students <br />
+                <span style={{ color: "var(--primary-terracotta)" }}>WHERE</span> cgpa &gt; <span style={{ color: "#E0A96D" }}>8.5</span>;
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 4 Feature Pills / Cards matching mockup screen 1 */}
+      {/* 4 Feature Cards */}
       <div style={{ 
         display: "grid", 
         gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", 
         gap: "20px", 
-        marginTop: "30px" 
+        marginTop: "20px" 
       }}>
         <div className="neo-card" style={{ display: "flex", gap: "16px", alignItems: "flex-start", padding: "20px" }}>
-          <div style={{ background: "#eff6ff", padding: "12px", borderRadius: "12px", color: "#2563eb" }}>
+          <div style={{ background: "var(--primary-terracotta-light)", padding: "12px", borderRadius: "12px", color: "var(--primary-terracotta)" }}>
             <Zap size={22} />
           </div>
           <div>
-            <h4 style={{ fontWeight: 700, fontSize: "0.98rem", marginBottom: "4px" }}>Simple Queries</h4>
-            <p style={{ fontSize: "0.85rem", color: "#64748b" }}>Ask questions in plain English or speak with voice recognition.</p>
+            <h4 style={{ fontWeight: 800, fontSize: "0.98rem", marginBottom: "4px", color: "var(--text-espresso)" }}>Simple Queries</h4>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-slate-taupe)" }}>Ask questions in plain English or speak with voice recognition.</p>
           </div>
         </div>
 
         <div className="neo-card" style={{ display: "flex", gap: "16px", alignItems: "flex-start", padding: "20px" }}>
-          <div style={{ background: "#ecfdf5", padding: "12px", borderRadius: "12px", color: "#10b981" }}>
+          <div style={{ background: "var(--accent-sage-light)", padding: "12px", borderRadius: "12px", color: "var(--accent-sage)" }}>
             <Code size={22} />
           </div>
           <div>
-            <h4 style={{ fontWeight: 700, fontSize: "0.98rem", marginBottom: "4px" }}>Accurate Results</h4>
-            <p style={{ fontSize: "0.85rem", color: "#64748b" }}>Powered by Google Gemini AI with semantic fallback for 100% uptime.</p>
+            <h4 style={{ fontWeight: 800, fontSize: "0.98rem", marginBottom: "4px", color: "var(--text-espresso)" }}>Accurate Results</h4>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-slate-taupe)" }}>Powered by Google Gemini AI with fallback for 100% reliability.</p>
           </div>
         </div>
 
         <div className="neo-card" style={{ display: "flex", gap: "16px", alignItems: "flex-start", padding: "20px" }}>
-          <div style={{ background: "#faf5ff", padding: "12px", borderRadius: "12px", color: "#8b5cf6" }}>
+          <div style={{ background: "var(--accent-sand-light)", padding: "12px", borderRadius: "12px", color: "#9C6B38" }}>
             <Layers size={22} />
           </div>
           <div>
-            <h4 style={{ fontWeight: 700, fontSize: "0.98rem", marginBottom: "4px" }}>Multiple Databases</h4>
-            <p style={{ fontSize: "0.85rem", color: "#64748b" }}>Pre-configured with students_db, sales_db & customizable containers.</p>
+            <h4 style={{ fontWeight: 800, fontSize: "0.98rem", marginBottom: "4px", color: "var(--text-espresso)" }}>Google Sheets Ingestion</h4>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-slate-taupe)" }}>Import public sheet links, copy-paste rows, or upload CSV files.</p>
           </div>
         </div>
 
         <div className="neo-card" style={{ display: "flex", gap: "16px", alignItems: "flex-start", padding: "20px" }}>
-          <div style={{ background: "#fffbeb", padding: "12px", borderRadius: "12px", color: "#f59e0b" }}>
+          <div style={{ background: "var(--bg-linen)", padding: "12px", borderRadius: "12px", color: "var(--text-espresso)" }}>
             <BookOpen size={22} />
           </div>
           <div>
-            <h4 style={{ fontWeight: 700, fontSize: "0.98rem", marginBottom: "4px" }}>Learn & Explore</h4>
-            <p style={{ fontSize: "0.85rem", color: "#64748b" }}>Inspect SQL syntax, analyze schemas, and view real-time charts.</p>
+            <h4 style={{ fontWeight: 800, fontSize: "0.98rem", marginBottom: "4px", color: "var(--text-espresso)" }}>Learn & Explore</h4>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-slate-taupe)" }}>Inspect schemas, relationships, and visualize data via live charts.</p>
           </div>
         </div>
       </div>

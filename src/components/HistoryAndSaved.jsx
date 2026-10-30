@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Download, Trash2, Play, CheckCircle, XCircle } from "lucide-react";
+import { Search, Download, Trash2, Play, CheckCircle, XCircle, Clock } from "lucide-react";
 
 export const HistoryAndSaved = ({ history, savedQueries, onRunQuery, onClearHistory, onRemoveSaved }) => {
   const [activeTab, setActiveTab] = useState("history"); // 'history' | 'saved'
@@ -33,25 +33,25 @@ export const HistoryAndSaved = ({ history, savedQueries, onRunQuery, onClearHist
       {/* Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "#0f172a" }}>
-            {activeTab === "history" ? "Query History" : "Saved Queries"}
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-espresso)" }}>
+            {activeTab === "history" ? "Query History & Logs" : "Saved Queries"}
           </h1>
-          <p style={{ color: "#64748b", fontSize: "0.92rem", marginTop: "4px" }}>
+          <p style={{ color: "var(--text-slate-taupe)", fontSize: "0.92rem", marginTop: "4px" }}>
             {activeTab === "history" 
-              ? "Comprehensive log of all executed queries, statuses, and validation feedback." 
-              : "Quick-access templates and bookmarks for repeated natural questions."}
+              ? "Exclusively displays queries genuinely executed by you in this session." 
+              : "Quick-access templates and bookmarks saved from real user queries."}
           </p>
         </div>
 
         <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
-          {activeTab === "history" && (
+          {activeTab === "history" && history.length > 0 && (
             <>
               <button className="btn-secondary" onClick={handleExportCsv}>
                 <Download size={15} /> Export Log CSV
               </button>
               <button 
                 onClick={onClearHistory}
-                style={{ background: "#fee2e2", border: "1px solid #fecaca", color: "#dc2626", padding: "8px 14px", borderRadius: "10px", fontWeight: 600, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
+                style={{ background: "#FEECEB", border: "1px solid #FCD3D1", color: "#C53B34", padding: "8px 14px", borderRadius: "var(--radius-md)", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "6px" }}
               >
                 <Trash2 size={14} /> Clear Log
               </button>
@@ -63,19 +63,19 @@ export const HistoryAndSaved = ({ history, savedQueries, onRunQuery, onClearHist
       {/* Tabs & Search Filter */}
       <div className="neo-card" style={{ padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
         {/* Tab Buttons */}
-        <div style={{ background: "#f1f5f9", padding: "4px", borderRadius: "12px", display: "flex", gap: "4px" }}>
+        <div style={{ background: "var(--bg-linen)", padding: "4px", borderRadius: "var(--radius-md)", display: "flex", gap: "4px" }}>
           <button
             onClick={() => setActiveTab("history")}
             style={{
               padding: "8px 18px",
-              borderRadius: "8px",
+              borderRadius: "var(--radius-sm)",
               border: "none",
               fontWeight: 700,
               fontSize: "0.88rem",
               cursor: "pointer",
-              background: activeTab === "history" ? "#ffffff" : "transparent",
-              color: activeTab === "history" ? "#2563eb" : "#64748b",
-              boxShadow: activeTab === "history" ? "0 2px 4px rgba(0,0,0,0.06)" : "none"
+              background: activeTab === "history" ? "#FFFFFF" : "transparent",
+              color: activeTab === "history" ? "var(--primary-terracotta)" : "var(--text-slate-taupe)",
+              boxShadow: activeTab === "history" ? "0 2px 6px rgba(44,38,29,0.06)" : "none"
             }}
           >
             History Log ({history.length})
@@ -84,14 +84,14 @@ export const HistoryAndSaved = ({ history, savedQueries, onRunQuery, onClearHist
             onClick={() => setActiveTab("saved")}
             style={{
               padding: "8px 18px",
-              borderRadius: "8px",
+              borderRadius: "var(--radius-sm)",
               border: "none",
               fontWeight: 700,
               fontSize: "0.88rem",
               cursor: "pointer",
-              background: activeTab === "saved" ? "#ffffff" : "transparent",
-              color: activeTab === "saved" ? "#2563eb" : "#64748b",
-              boxShadow: activeTab === "saved" ? "0 2px 4px rgba(0,0,0,0.06)" : "none"
+              background: activeTab === "saved" ? "#FFFFFF" : "transparent",
+              color: activeTab === "saved" ? "var(--primary-terracotta)" : "var(--text-slate-taupe)",
+              boxShadow: activeTab === "saved" ? "0 2px 6px rgba(44,38,29,0.06)" : "none"
             }}
           >
             Saved Bookmarks ({savedQueries.length})
@@ -99,14 +99,14 @@ export const HistoryAndSaved = ({ history, savedQueries, onRunQuery, onClearHist
         </div>
 
         {/* Search Bar */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "10px", padding: "6px 14px", minWidth: "260px" }}>
-          <Search size={16} color="#64748b" />
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "var(--bg-cream)", border: "1px solid var(--card-border)", borderRadius: "var(--radius-md)", padding: "6px 14px", minWidth: "260px" }}>
+          <Search size={16} color="var(--text-muted)" />
           <input
             type="text"
             placeholder="Search queries..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ border: "none", outline: "none", background: "transparent", fontSize: "0.88rem", width: "100%" }}
+            style={{ border: "none", outline: "none", background: "transparent", fontSize: "0.88rem", width: "100%", color: "var(--text-espresso)" }}
           />
         </div>
       </div>
@@ -115,56 +115,58 @@ export const HistoryAndSaved = ({ history, savedQueries, onRunQuery, onClearHist
       {activeTab === "history" && (
         <div className="neo-card" style={{ padding: 0, overflow: "hidden" }}>
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.88rem" }}>
-              <thead style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+            <table>
+              <thead>
                 <tr>
-                  <th style={{ padding: "14px 20px", textAlign: "left", fontWeight: 700, color: "#475569" }}>Query Prompt</th>
-                  <th style={{ padding: "14px 20px", textAlign: "left", fontWeight: 700, color: "#475569" }}>Type</th>
-                  <th style={{ padding: "14px 20px", textAlign: "left", fontWeight: 700, color: "#475569" }}>Date / Time</th>
-                  <th style={{ padding: "14px 20px", textAlign: "left", fontWeight: 700, color: "#475569" }}>Status</th>
-                  <th style={{ padding: "14px 20px", textAlign: "left", fontWeight: 700, color: "#475569" }}>Feedback</th>
-                  <th style={{ padding: "14px 20px", textAlign: "right", fontWeight: 700, color: "#475569" }}>Action</th>
+                  <th style={{ padding: "14px 20px", textAlign: "left" }}>User Query</th>
+                  <th style={{ padding: "14px 20px", textAlign: "left" }}>Type</th>
+                  <th style={{ padding: "14px 20px", textAlign: "left" }}>Execution Time</th>
+                  <th style={{ padding: "14px 20px", textAlign: "left" }}>Status</th>
+                  <th style={{ padding: "14px 20px", textAlign: "left" }}>Feedback</th>
+                  <th style={{ padding: "14px 20px", textAlign: "right" }}>Action</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredHistory.length === 0 ? (
                   <tr>
-                    <td colSpan="6" style={{ textAlign: "center", padding: "40px", color: "#94a3b8" }}>
-                      No queries logged yet. Try asking questions on the Query page!
+                    <td colSpan="6" style={{ textAlign: "center", padding: "50px 20px", color: "var(--text-muted)" }}>
+                      <Clock size={28} style={{ display: "block", margin: "0 auto 10px auto", opacity: 0.4 }} />
+                      <p style={{ fontWeight: 600, fontSize: "0.95rem" }}>No query execution history recorded yet.</p>
+                      <p style={{ fontSize: "0.82rem", marginTop: "4px" }}>Run queries in the Query Studio to see your live audit log appear here.</p>
                     </td>
                   </tr>
                 ) : (
                   filteredHistory.map((item, idx) => (
-                    <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
-                      <td style={{ padding: "14px 20px", fontWeight: 600, color: "#1e293b", maxWidth: "300px" }}>
+                    <tr key={idx}>
+                      <td style={{ padding: "14px 20px", fontWeight: 700, color: "var(--text-espresso)", maxWidth: "340px" }}>
                         <div>{item.query}</div>
                         {item.sql && (
-                          <div style={{ fontSize: "0.76rem", color: "#64748b", fontFamily: "var(--font-mono)", marginTop: "4px" }}>
-                            {item.sql.slice(0, 50)}...
+                          <div style={{ fontSize: "0.76rem", color: "var(--text-slate-taupe)", fontFamily: "var(--font-mono)", marginTop: "4px" }}>
+                            {item.sql.slice(0, 60)}...
                           </div>
                         )}
                       </td>
                       <td style={{ padding: "14px 20px" }}>
-                        <span className="badge badge-blue">SELECT</span>
+                        <span className="badge badge-terracotta">SELECT</span>
                       </td>
-                      <td style={{ padding: "14px 20px", color: "#64748b", fontSize: "0.82rem" }}>
-                        {item.timestamp ? new Date(item.timestamp).toLocaleTimeString() : "Recent"}
+                      <td style={{ padding: "14px 20px", color: "var(--text-slate-taupe)", fontSize: "0.82rem" }}>
+                        {item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : "Just now"}
                       </td>
                       <td style={{ padding: "14px 20px" }}>
                         {item.success ? (
-                          <span className="badge badge-success" style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                          <span className="badge badge-sage">
                             <CheckCircle size={12} /> Success
                           </span>
                         ) : (
-                          <span className="badge" style={{ background: "#fee2e2", color: "#dc2626" }}>
+                          <span className="badge" style={{ background: "#FEECEB", color: "#C53B34" }}>
                             <XCircle size={12} /> Failed
                           </span>
                         )}
                       </td>
                       <td style={{ padding: "14px 20px" }}>
-                        {item.feedback === "positive" && <span style={{ color: "#16a34a", fontWeight: 600 }}>👍 Verified</span>}
-                        {item.feedback === "negative" && <span style={{ color: "#dc2626", fontWeight: 600 }}>👎 Incorrect</span>}
-                        {!item.feedback && <span style={{ color: "#94a3b8" }}>Pending</span>}
+                        {item.feedback === "positive" && <span style={{ color: "var(--accent-sage)", fontWeight: 700 }}>👍 Verified</span>}
+                        {item.feedback === "negative" && <span style={{ color: "#C53B34", fontWeight: 700 }}>👎 Incorrect</span>}
+                        {!item.feedback && <span style={{ color: "var(--text-muted)" }}>Pending</span>}
                       </td>
                       <td style={{ padding: "14px 20px", textAlign: "right" }}>
                         <button
@@ -184,44 +186,53 @@ export const HistoryAndSaved = ({ history, savedQueries, onRunQuery, onClearHist
         </div>
       )}
 
-      {/* Saved Queries Bookmarks (Screen 9) */}
+      {/* Saved Bookmarks */}
       {activeTab === "saved" && (
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
-          {filteredSaved.map((item, idx) => (
-            <div key={idx} className="neo-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
-                  <h4 style={{ fontSize: "1.02rem", fontWeight: 700, color: "#0f172a" }}>{item.title || item.query}</h4>
-                  <span className="badge badge-purple">SELECT</span>
-                </div>
-                <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "12px" }}>
-                  Prompt: &ldquo;{item.query}&rdquo;
-                </p>
-                {item.sql && (
-                  <div className="code-box" style={{ fontSize: "0.78rem", marginBottom: "16px" }}>
-                    <div className="code-box-content" style={{ padding: "10px" }}>{item.sql}</div>
-                  </div>
-                )}
-              </div>
-
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid #f1f5f9", paddingTop: "12px" }}>
-                <button
-                  onClick={() => onRemoveSaved(idx)}
-                  style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "0.82rem" }}
-                >
-                  Delete
-                </button>
-
-                <button
-                  onClick={() => onRunQuery(item.query)}
-                  className="btn-primary"
-                  style={{ padding: "8px 16px", fontSize: "0.82rem" }}
-                >
-                  <Play size={14} /> Execute
-                </button>
-              </div>
+        <div>
+          {filteredSaved.length === 0 ? (
+            <div className="neo-card" style={{ textAlign: "center", padding: "50px 20px", color: "var(--text-muted)" }}>
+              <p style={{ fontWeight: 600, fontSize: "0.95rem" }}>No saved query bookmarks yet.</p>
+              <p style={{ fontSize: "0.82rem", marginTop: "4px" }}>Click &ldquo;Save Query&rdquo; on any result in the Query Studio to bookmark it here.</p>
             </div>
-          ))}
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
+              {filteredSaved.map((item, idx) => (
+                <div key={idx} className="neo-card" style={{ display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+                      <h4 style={{ fontSize: "1.02rem", fontWeight: 800, color: "var(--text-espresso)" }}>{item.title || item.query}</h4>
+                      <span className="badge badge-sand">BOOKMARK</span>
+                    </div>
+                    <p style={{ fontSize: "0.85rem", color: "var(--text-slate-taupe)", marginBottom: "12px" }}>
+                      Prompt: &ldquo;{item.query}&rdquo;
+                    </p>
+                    {item.sql && (
+                      <div className="code-box" style={{ fontSize: "0.78rem", marginBottom: "16px" }}>
+                        <div className="code-box-content" style={{ padding: "10px" }}>{item.sql}</div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", borderTop: "1px solid var(--card-border)", paddingTop: "12px" }}>
+                    <button
+                      onClick={() => onRemoveSaved(idx)}
+                      style={{ background: "transparent", border: "none", color: "#C53B34", cursor: "pointer", fontSize: "0.82rem", fontWeight: 600 }}
+                    >
+                      Delete
+                    </button>
+
+                    <button
+                      onClick={() => onRunQuery(item.query)}
+                      className="btn-primary"
+                      style={{ padding: "8px 16px", fontSize: "0.82rem" }}
+                    >
+                      <Play size={14} /> Execute
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

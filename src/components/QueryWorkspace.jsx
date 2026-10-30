@@ -14,9 +14,12 @@ import {
   Download, 
   Check, 
   Database,
-  ArrowRight
+  ArrowRight,
+  FileSpreadsheet,
+  Terminal
 } from "lucide-react";
 import { ChartRenderer } from "./ChartRenderer";
+import { BulkImportModal } from "./BulkImportModal";
 
 export const QueryWorkspace = ({ 
   databases, 
@@ -25,32 +28,20 @@ export const QueryWorkspace = ({
   naturalQuery, 
   setNaturalQuery, 
   isListening, 
-  toggleListening,
-  onGenerateAndRun,
-  lastResult,
-  isLoading,
-  onSaveQuery,
-  onFeedback,
-  savedQueries,
-  onOpenDataStudio
+  toggleListening, 
+  onGenerateAndRun, 
+  lastResult, 
+  isLoading, 
+  onSaveQuery, 
+  onFeedback, 
+  savedQueries, 
+  onOpenDataStudio,
+  onBulkImportSuccess
 }) => {
   const [activeTab, setActiveTab] = useState("table"); // 'table' | 'chart'
   const [copied, setCopied] = useState(false);
-  const [showExplanation, setShowExplanation] = useState(true);
   const [feedbackSent, setFeedbackSent] = useState(null);
-
-  const sampleQuestions = activeDbId === "students_db" ? [
-    "Show all students from the CSE department",
-    "Count students in each department",
-    "Show students with CGPA >= 8.5",
-    "Show placements and packages for 2026",
-    "List all departments with HOD names"
-  ] : [
-    "Show total sales by region",
-    "Top products by sales revenue",
-    "Show all customers and their cities",
-    "List sales above 2000"
-  ];
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   const handleCopy = () => {
     if (lastResult?.sql) {
@@ -80,22 +71,22 @@ export const QueryWorkspace = ({
       {/* Top Banner / Heading */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "16px" }}>
         <div>
-          <h1 style={{ fontSize: "1.8rem", fontWeight: 800, color: "#0f172a", letterSpacing: "-0.5px" }}>
-            Natural Language to SQL
+          <h1 style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--text-espresso)", letterSpacing: "-0.5px" }}>
+            Query Studio
           </h1>
-          <p style={{ color: "#64748b", marginTop: "4px", fontSize: "0.95rem" }}>
-            Enter your question and generate SQL instantly with interactive tables and charts.
+          <p style={{ color: "var(--text-slate-taupe)", marginTop: "4px", fontSize: "0.95rem" }}>
+            Ask in plain English or speak your query. Instant translation into optimized SQL with dynamic tables and charts.
           </p>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
           {/* Active Database selector */}
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "white", padding: "6px 14px", borderRadius: "12px", border: "1px solid #cbd5e1" }}>
-            <Database size={16} color="#2563eb" />
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#FFFFFF", padding: "6px 14px", borderRadius: "var(--radius-md)", border: "1px solid var(--card-border)" }}>
+            <Database size={16} color="var(--primary-terracotta)" />
             <select
               value={activeDbId}
               onChange={(e) => onSwitchDb(e.target.value)}
-              style={{ border: "none", background: "transparent", fontWeight: 700, fontSize: "0.88rem", color: "#1e293b", outline: "none", cursor: "pointer" }}
+              style={{ border: "none", background: "transparent", fontWeight: 700, fontSize: "0.88rem", color: "var(--text-espresso)", outline: "none", cursor: "pointer" }}
             >
               {Object.values(databases).map(db => (
                 <option key={db.id} value={db.id}>{db.name}</option>
@@ -103,31 +94,36 @@ export const QueryWorkspace = ({
             </select>
           </div>
 
+          <button className="btn-sage" onClick={() => setShowBulkImport(true)}>
+            <FileSpreadsheet size={15} /> Bulk Import Sheets
+          </button>
+
           <button className="btn-secondary" onClick={onOpenDataStudio}>
-            Insert / Edit Data <ArrowRight size={14} />
+            View Records <ArrowRight size={14} />
           </button>
         </div>
       </div>
 
-      {/* Query Input Card */}
+      {/* Query Input Card - Blank start with intuitive dynamic placeholder (Page 4 requirement) */}
       <div className="neo-card" style={{ padding: "24px" }}>
         <form onSubmit={(e) => { e.preventDefault(); onGenerateAndRun(); }}>
-          <div style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "14px" }}>
+          <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
             <div style={{ 
               flex: 1, 
               display: "flex", 
               alignItems: "center", 
-              background: "#f8fafc", 
-              border: "1.5px solid #cbd5e1", 
-              borderRadius: "14px", 
+              background: "var(--bg-cream)", 
+              border: "1.5px solid var(--card-border)", 
+              borderRadius: "var(--radius-md)", 
               padding: "6px 16px",
-              boxShadow: "inset 0 2px 4px rgba(0,0,0,0.02)"
+              boxShadow: "inset 0 2px 4px rgba(44,38,29,0.02)"
             }}>
               <input
                 type="text"
-                placeholder="Ask your question in natural English (e.g. Show all students from CSE)..."
+                placeholder='e.g., "Add 5 new students in AIDS department" or "Show all records where cgpa > 8.5"...'
                 value={naturalQuery}
                 onChange={(e) => setNaturalQuery(e.target.value)}
+                autoFocus
                 style={{
                   width: "100%",
                   padding: "10px 0",
@@ -135,8 +131,9 @@ export const QueryWorkspace = ({
                   outline: "none",
                   background: "transparent",
                   fontSize: "1.02rem",
-                  fontWeight: 500,
-                  color: "#0f172a"
+                  fontWeight: 600,
+                  color: "var(--text-espresso)",
+                  fontFamily: "var(--font-main)"
                 }}
               />
               
@@ -161,35 +158,13 @@ export const QueryWorkspace = ({
           </div>
         </form>
 
-        {/* Quick Suggestion Pills */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", marginTop: "12px" }}>
-          <span style={{ fontSize: "0.8rem", fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>
-            Try queries:
+        <div style={{ marginTop: "12px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
+          <span style={{ fontSize: "0.82rem", color: "var(--text-slate-taupe)" }}>
+            Tip: Speak or type query instructions. Results and chart visualizations are generated automatically.
           </span>
-          {sampleQuestions.map((q, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                setNaturalQuery(q);
-                onGenerateAndRun(q);
-              }}
-              style={{
-                background: "#f1f5f9",
-                border: "1px solid #e2e8f0",
-                padding: "6px 12px",
-                borderRadius: "20px",
-                fontSize: "0.82rem",
-                color: "#334155",
-                cursor: "pointer",
-                transition: "all 0.15s ease",
-                fontWeight: 500
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = "#eff6ff"; e.currentTarget.style.color = "#2563eb"; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#334155"; }}
-            >
-              {q}
-            </button>
-          ))}
+          <span className="badge badge-sand">
+            <Terminal size={12} /> SQL Engine Ready
+          </span>
         </div>
       </div>
 
@@ -198,13 +173,13 @@ export const QueryWorkspace = ({
         <div className="neo-card" style={{ padding: "20px 24px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#0f172a" }}>Generated SQL</h3>
-              <span className="badge badge-success">{lastResult.source || "Google Gemini AI"}</span>
+              <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--text-espresso)" }}>Generated SQL</h3>
+              <span className="badge badge-sage">{lastResult.source || "Google Gemini AI"}</span>
             </div>
 
             <div style={{ display: "flex", gap: "8px" }}>
               <button className="btn-secondary" onClick={handleCopy} style={{ padding: "6px 12px", fontSize: "0.82rem" }}>
-                {copied ? <><Check size={14} color="#16a34a" /> Copied</> : <><Copy size={14} /> Copy SQL</>}
+                {copied ? <><Check size={14} color="var(--accent-sage)" /> Copied</> : <><Copy size={14} /> Copy SQL</>}
               </button>
               <button 
                 className="btn-secondary" 
@@ -227,38 +202,36 @@ export const QueryWorkspace = ({
           </div>
 
           {lastResult.explanation && (
-            <div style={{ marginTop: "12px", padding: "10px 14px", background: "#f8fafc", borderRadius: "10px", border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: "10px" }}>
-              <HelpCircle size={16} color="#2563eb" />
-              <span style={{ fontSize: "0.86rem", color: "#475569" }}>{lastResult.explanation}</span>
+            <div style={{ marginTop: "12px", padding: "10px 14px", background: "var(--bg-linen)", borderRadius: "var(--radius-sm)", border: "1px solid var(--card-border)", display: "flex", alignItems: "center", gap: "10px" }}>
+              <HelpCircle size={16} color="var(--primary-terracotta)" />
+              <span style={{ fontSize: "0.86rem", color: "var(--text-slate-taupe)" }}>{lastResult.explanation}</span>
             </div>
           )}
         </div>
       )}
 
-      {/* Query Result Section (Screen 6) */}
+      {/* Query Result Section */}
       {lastResult && (
         <div className="neo-card" style={{ padding: 0, overflow: "hidden" }}>
-          {/* Header of results */}
           <div style={{ 
             padding: "18px 24px", 
-            borderBottom: "1px solid #e2e8f0", 
+            borderBottom: "1px solid var(--card-border)", 
             display: "flex", 
             justifyContent: "space-between", 
             alignItems: "center",
             flexWrap: "wrap",
             gap: "12px",
-            background: "#ffffff"
+            background: "#FFFFFF"
           }}>
             <div>
-              <h3 style={{ fontSize: "1.15rem", fontWeight: 800, color: "#0f172a" }}>Query Result</h3>
-              <p style={{ fontSize: "0.82rem", color: "#64748b" }}>
-                Results for: &ldquo;{lastResult.query}&rdquo; ({lastResult.rowCount} records found)
+              <h3 style={{ fontSize: "1.15rem", fontWeight: 800, color: "var(--text-espresso)" }}>Query Result</h3>
+              <p style={{ fontSize: "0.82rem", color: "var(--text-slate-taupe)" }}>
+                Results for: &ldquo;{lastResult.query}&rdquo; ({lastResult.rowCount} records returned)
               </p>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              {/* Table / Chart Tab switch */}
-              <div style={{ background: "#f1f5f9", padding: "4px", borderRadius: "10px", display: "flex", gap: "4px" }}>
+              <div style={{ background: "var(--bg-linen)", padding: "4px", borderRadius: "var(--radius-sm)", display: "flex", gap: "4px" }}>
                 <button
                   onClick={() => setActiveTab("table")}
                   style={{
@@ -267,13 +240,13 @@ export const QueryWorkspace = ({
                     gap: "6px",
                     padding: "6px 14px",
                     border: "none",
-                    borderRadius: "8px",
+                    borderRadius: "6px",
                     fontSize: "0.82rem",
                     fontWeight: 700,
                     cursor: "pointer",
-                    background: activeTab === "table" ? "#ffffff" : "transparent",
-                    color: activeTab === "table" ? "#2563eb" : "#64748b",
-                    boxShadow: activeTab === "table" ? "0 2px 4px rgba(0,0,0,0.06)" : "none"
+                    background: activeTab === "table" ? "#FFFFFF" : "transparent",
+                    color: activeTab === "table" ? "var(--primary-terracotta)" : "var(--text-slate-taupe)",
+                    boxShadow: activeTab === "table" ? "0 2px 4px rgba(44,38,29,0.06)" : "none"
                   }}
                 >
                   <TableIcon size={14} /> Table
@@ -286,13 +259,13 @@ export const QueryWorkspace = ({
                     gap: "6px",
                     padding: "6px 14px",
                     border: "none",
-                    borderRadius: "8px",
+                    borderRadius: "6px",
                     fontSize: "0.82rem",
                     fontWeight: 700,
                     cursor: "pointer",
-                    background: activeTab === "chart" ? "#ffffff" : "transparent",
-                    color: activeTab === "chart" ? "#2563eb" : "#64748b",
-                    boxShadow: activeTab === "chart" ? "0 2px 4px rgba(0,0,0,0.06)" : "none"
+                    background: activeTab === "chart" ? "#FFFFFF" : "transparent",
+                    color: activeTab === "chart" ? "var(--primary-terracotta)" : "var(--text-slate-taupe)",
+                    boxShadow: activeTab === "chart" ? "0 2px 4px rgba(44,38,29,0.06)" : "none"
                   }}
                 >
                   <BarChart2 size={14} /> Chart
@@ -305,10 +278,9 @@ export const QueryWorkspace = ({
             </div>
           </div>
 
-          {/* Body of results */}
           <div style={{ padding: activeTab === "chart" ? "24px" : "0" }}>
             {lastResult.error ? (
-              <div style={{ padding: "30px", textAlign: "center", color: "#ef4444" }}>
+              <div style={{ padding: "30px", textAlign: "center", color: "#C53B34" }}>
                 <p style={{ fontWeight: 700 }}>Query Execution Failed</p>
                 <p style={{ fontSize: "0.88rem", marginTop: "6px" }}>{lastResult.error}</p>
               </div>
@@ -321,11 +293,11 @@ export const QueryWorkspace = ({
               />
             ) : (
               <div style={{ overflowX: "auto" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.88rem" }}>
-                  <thead style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+                <table>
+                  <thead>
                     <tr>
                       {lastResult.data && lastResult.data[0] && Object.keys(lastResult.data[0]).map(col => (
-                        <th key={col} style={{ padding: "12px 18px", textAlign: "left", fontWeight: 700, color: "#475569" }}>
+                        <th key={col} style={{ padding: "12px 18px", textAlign: "left" }}>
                           {col}
                         </th>
                       ))}
@@ -334,9 +306,9 @@ export const QueryWorkspace = ({
                   <tbody>
                     {lastResult.data && lastResult.data.length > 0 ? (
                       lastResult.data.map((row, rIdx) => (
-                        <tr key={rIdx} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                        <tr key={rIdx}>
                           {Object.values(row).map((val, cIdx) => (
-                            <td key={cIdx} style={{ padding: "12px 18px", color: "#1e293b" }}>
+                            <td key={cIdx} style={{ padding: "12px 18px", color: "var(--text-espresso)" }}>
                               {String(val ?? "-")}
                             </td>
                           ))}
@@ -344,8 +316,8 @@ export const QueryWorkspace = ({
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="10" style={{ padding: "30px", textAlign: "center", color: "#64748b" }}>
-                          Query executed successfully. 0 rows returned.
+                        <td colSpan="10" style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+                          Query executed successfully. 0 rows returned for this criteria.
                         </td>
                       </tr>
                     )}
@@ -358,21 +330,21 @@ export const QueryWorkspace = ({
           {/* Feedback & Tagline Footer */}
           <div style={{ 
             padding: "16px 24px", 
-            borderTop: "1px solid #e2e8f0", 
+            borderTop: "1px solid var(--card-border)", 
             display: "flex", 
             justifyContent: "space-between", 
             alignItems: "center", 
-            background: "#fafafa",
+            background: "var(--bg-linen)",
             flexWrap: "wrap",
             gap: "12px"
           }}>
-            <span style={{ fontSize: "0.85rem", fontStyle: "italic", color: "#64748b", fontWeight: 500 }}>
+            <span style={{ fontSize: "0.85rem", fontStyle: "italic", color: "var(--text-slate-taupe)", fontWeight: 600 }}>
               &ldquo;No SQL required — just ask your data.&rdquo;
             </span>
 
             {/* Was this result correct? */}
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#475569" }}>
+              <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-espresso)" }}>
                 Was this result correct?
               </span>
               <button
@@ -381,8 +353,8 @@ export const QueryWorkspace = ({
                   onFeedback(lastResult.id, "positive");
                 }}
                 style={{
-                  background: feedbackSent === "positive" ? "#dcfce7" : "#ffffff",
-                  border: "1px solid #cbd5e1",
+                  background: feedbackSent === "positive" ? "var(--accent-sage-light)" : "#FFFFFF",
+                  border: "1px solid var(--card-border)",
                   borderRadius: "8px",
                   padding: "6px 12px",
                   cursor: "pointer",
@@ -390,8 +362,8 @@ export const QueryWorkspace = ({
                   alignItems: "center",
                   gap: "6px",
                   fontSize: "0.82rem",
-                  fontWeight: 600,
-                  color: feedbackSent === "positive" ? "#16a34a" : "#475569"
+                  fontWeight: 700,
+                  color: feedbackSent === "positive" ? "var(--accent-sage)" : "var(--text-slate-taupe)"
                 }}
               >
                 <ThumbsUp size={14} /> Yes
@@ -402,8 +374,8 @@ export const QueryWorkspace = ({
                   onFeedback(lastResult.id, "negative");
                 }}
                 style={{
-                  background: feedbackSent === "negative" ? "#fee2e2" : "#ffffff",
-                  border: "1px solid #cbd5e1",
+                  background: feedbackSent === "negative" ? "#FEECEB" : "#FFFFFF",
+                  border: "1px solid var(--card-border)",
                   borderRadius: "8px",
                   padding: "6px 12px",
                   cursor: "pointer",
@@ -411,8 +383,8 @@ export const QueryWorkspace = ({
                   alignItems: "center",
                   gap: "6px",
                   fontSize: "0.82rem",
-                  fontWeight: 600,
-                  color: feedbackSent === "negative" ? "#dc2626" : "#475569"
+                  fontWeight: 700,
+                  color: feedbackSent === "negative" ? "#C53B34" : "var(--text-slate-taupe)"
                 }}
               >
                 <ThumbsDown size={14} /> No
@@ -421,6 +393,15 @@ export const QueryWorkspace = ({
           </div>
         </div>
       )}
+
+      {/* Bulk Import Modal */}
+      <BulkImportModal
+        isOpen={showBulkImport}
+        onClose={() => setShowBulkImport(false)}
+        databases={databases}
+        activeDbId={activeDbId}
+        onImportSuccess={onBulkImportSuccess}
+      />
     </div>
   );
 };

@@ -27,7 +27,11 @@ ChartJS.register(
 
 export const ChartRenderer = ({ data, chartType, labelKey, valueKey }) => {
   if (!data || data.length === 0) {
-    return <div style={{ padding: "30px", textAlign: "center", color: "#64748b" }}>No data to visualize</div>;
+    return (
+      <div style={{ padding: "40px", textAlign: "center", color: "var(--text-muted)" }}>
+        No data to visualize
+      </div>
+    );
   }
 
   // Detect keys automatically if not provided
@@ -43,15 +47,16 @@ export const ChartRenderer = ({ data, chartType, labelKey, valueKey }) => {
   const labels = data.map(item => String(item[activeLabel] ?? ""));
   const values = data.map(item => Number(item[activeValue]) || 0);
 
+  // Warm studio palette for doughnut & bar charts
   const colors = [
-    "rgba(37, 99, 235, 0.8)",
-    "rgba(14, 165, 233, 0.8)",
-    "rgba(168, 85, 247, 0.8)",
-    "rgba(245, 158, 11, 0.8)",
-    "rgba(16, 185, 129, 0.8)",
-    "rgba(244, 63, 94, 0.8)",
-    "rgba(99, 102, 241, 0.8)",
-    "rgba(234, 179, 8, 0.8)"
+    "#C85A32", // Terracotta
+    "#2D5A46", // Sage
+    "#D4A373", // Sand
+    "#9C6B38", // Ochre
+    "#E0534C", // Coral
+    "#6B665E", // Slate Taupe
+    "#B85028", // Deep Terracotta
+    "#3E735B"  // Deep Sage
   ];
 
   const chartData = {
@@ -60,8 +65,8 @@ export const ChartRenderer = ({ data, chartType, labelKey, valueKey }) => {
       {
         label: activeValue ? activeValue.replace(/_/g, " ").toUpperCase() : "VALUE",
         data: values.slice(0, 15),
-        backgroundColor: chartType === "doughnut" ? colors : "rgba(37, 99, 235, 0.75)",
-        borderColor: chartType === "doughnut" ? "#ffffff" : "rgba(37, 99, 235, 1)",
+        backgroundColor: chartType === "doughnut" ? colors : "rgba(200, 90, 50, 0.8)",
+        borderColor: chartType === "doughnut" ? "#FFFFFF" : "rgba(200, 90, 50, 1)",
         borderWidth: 2,
         borderRadius: 8,
         tension: 0.35,
@@ -77,14 +82,14 @@ export const ChartRenderer = ({ data, chartType, labelKey, valueKey }) => {
       legend: {
         position: chartType === "doughnut" ? "right" : "top",
         labels: {
-          font: { family: "'Plus Jakarta Sans', sans-serif", size: 12, weight: 600 },
-          color: "#475569"
+          font: { family: "'Urbanist', sans-serif", size: 12, weight: 700 },
+          color: "#1F1D1A"
         }
       },
       tooltip: {
-        backgroundColor: "#0f172a",
-        titleFont: { family: "'Plus Jakarta Sans', sans-serif", size: 13 },
-        bodyFont: { family: "'Plus Jakarta Sans', sans-serif", size: 12 },
+        backgroundColor: "#1F1D1A",
+        titleFont: { family: "'Urbanist', sans-serif", size: 13, weight: 700 },
+        bodyFont: { family: "'Urbanist', sans-serif", size: 12 },
         padding: 12,
         cornerRadius: 8
       }
@@ -92,11 +97,11 @@ export const ChartRenderer = ({ data, chartType, labelKey, valueKey }) => {
     scales: chartType === "doughnut" ? {} : {
       x: {
         grid: { display: false },
-        ticks: { font: { family: "'Plus Jakarta Sans', sans-serif" }, color: "#64748b" }
+        ticks: { font: { family: "'Urbanist', sans-serif", weight: 600 }, color: "#6B665E" }
       },
       y: {
-        grid: { color: "#f1f5f9" },
-        ticks: { font: { family: "'Plus Jakarta Sans', sans-serif" }, color: "#64748b" }
+        grid: { color: "rgba(44, 38, 29, 0.06)" },
+        ticks: { font: { family: "'Urbanist', sans-serif", weight: 600 }, color: "#6B665E" }
       }
     }
   };

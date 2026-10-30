@@ -5,16 +5,12 @@ import {
   Clock, 
   Bookmark, 
   Database, 
-  Search, 
   BarChart2, 
   Settings, 
-  User, 
   Layers, 
-  LogOut, 
   Sparkles,
-  Play,
-  Bell,
-  Cpu
+  ShieldCheck,
+  FileSpreadsheet
 } from "lucide-react";
 
 // Components
@@ -39,54 +35,45 @@ export default function App() {
   // Navigation State: 'landing' | 'dashboard' | 'query' | 'datastudio' | 'schema' | 'history' | 'analytics' | 'settings'
   const [currentView, setCurrentView] = useState("dashboard");
 
-  // Persistent Databases State
+  // Persistent Databases State (Starts 100% clean without mock rows)
   const [databases, setDatabases] = useState(() => {
-    const saved = localStorage.getItem("neo_databases_v1");
+    const saved = localStorage.getItem("neo_databases_v2");
     return saved ? JSON.parse(saved) : INITIAL_DATABASES;
   });
 
   const [activeDbId, setActiveDbId] = useState("students_db");
 
-  // Query Workspace State
+  // Query Workspace State - Starts blank as requested in Page 4
   const [naturalQuery, setNaturalQuery] = useState("");
   const [lastResult, setLastResult] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // History & Saved Queries State
+  // History & Saved Queries State - Starts empty without hardcoded mock items as requested in Page 2
   const [history, setHistory] = useState(() => {
-    const saved = localStorage.getItem("neo_history_v1");
-    return saved ? JSON.parse(saved) : [
-      { id: "h1", query: "Show all students from CSE", sql: "SELECT * FROM students WHERE department = 'CSE';", timestamp: Date.now() - 120000, success: true, feedback: "positive" },
-      { id: "h2", query: "Count students in each department", sql: "SELECT department, COUNT(*) FROM students GROUP BY department;", timestamp: Date.now() - 720000, success: true, feedback: null },
-      { id: "h3", query: "Show students with CGPA > 8", sql: "SELECT name, cgpa FROM students WHERE cgpa >= 8.5;", timestamp: Date.now() - 1800000, success: true, feedback: "positive" }
-    ];
+    const saved = localStorage.getItem("neo_history_v2");
+    return saved ? JSON.parse(saved) : [];
   });
 
   const [savedQueries, setSavedQueries] = useState(() => {
-    const saved = localStorage.getItem("neo_saved_queries_v1");
-    return saved ? JSON.parse(saved) : [
-      { id: "s1", title: "CSE Students", query: "Show all students from the CSE department", sql: "SELECT * FROM students WHERE department = 'CSE';" },
-      { id: "s2", title: "Department Count", query: "Count students in each department", sql: "SELECT department, COUNT(*) as student_count FROM students GROUP BY department;" },
-      { id: "s3", title: "High CGPA", query: "Show students with CGPA > 8", sql: "SELECT name, department, cgpa FROM students WHERE cgpa >= 8.5 ORDER BY cgpa DESC;" },
-      { id: "s4", title: "Placements 2026", query: "Show placement details for 2026", sql: "SELECT s.name, p.company, p.package_lpa FROM placements p JOIN students s ON p.student_id = s.id;" }
-    ];
+    const saved = localStorage.getItem("neo_saved_queries_v2");
+    return saved ? JSON.parse(saved) : [];
   });
 
   // Auth Modal State
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
 
-  // Save to localStorage
+  // Synchronize state changes to localStorage immediately (Page 5 requirement)
   useEffect(() => {
-    localStorage.setItem("neo_databases_v1", JSON.stringify(databases));
+    localStorage.setItem("neo_databases_v2", JSON.stringify(databases));
   }, [databases]);
 
   useEffect(() => {
-    localStorage.setItem("neo_history_v1", JSON.stringify(history));
+    localStorage.setItem("neo_history_v2", JSON.stringify(history));
   }, [history]);
 
   useEffect(() => {
-    localStorage.setItem("neo_saved_queries_v1", JSON.stringify(savedQueries));
+    localStorage.setItem("neo_saved_queries_v2", JSON.stringify(savedQueries));
   }, [savedQueries]);
 
   // Voice Recognition for Main Query Bar
@@ -130,25 +117,27 @@ export default function App() {
 
       setLastResult(resultObj);
 
-      // Log into history
+      // Log exclusively real executed query into history
       setHistory(prev => [resultObj, ...prev]);
 
       if (execution.success && execution.rowCount > 0) {
-        confetti({ particleCount: 35, spread: 60, origin: { y: 0.8 } });
+        confetti({ particleCount: 30, spread: 60, origin: { y: 0.8 }, colors: ['#C85A32', '#2D5A46', '#D4A373'] });
       }
     } catch (err) {
       console.error("Execution failed:", err);
-      setLastResult({
+      const errObj = {
         id: `err_${Date.now()}`,
         query: queryToRun,
-        sql: "-- Parsing error",
-        explanation: "Unable to process query",
+        sql: "-- Execution Error",
+        explanation: "Unable to execute query against database",
         data: [],
         rowCount: 0,
         error: err.message,
         success: false,
         timestamp: Date.now()
-      });
+      };
+      setLastResult(errObj);
+      setHistory(prev => [errObj, ...prev]);
     } finally {
       setIsLoading(false);
     }
@@ -184,7 +173,54 @@ export default function App() {
 
   const handleResetDemoData = () => {
     setDatabases(INITIAL_DATABASES);
-    localStorage.removeItem("neo_databases_v1");
+    setHistory([]);
+    setSavedQueries([]);
+    setLastResult(null);
+    setNaturalQuery("");
+    localStorage.removeItem("neo_databases_v2");
+    localStorage.removeItem("neo_history_v2");
+    localStorage.removeItem("neo_saved_queries_v2");
+  };
+
+  // Bulk import callback from Query Studio or DataStudio
+  const handleBulkImportSuccess = (targetTableName, headers, rows) => {
+    const currentDb = databases[activeDbId] || databases["students_db"];
+    const table = currentDb.tables[targetTableName];
+    if (!table) return;
+
+    // Expand schema if new columns exist
+    const existingColNames = table.schema.map(c => c.name.toLowerCase());
+    const newSchema = [...table.schema];
+
+    headers.forEach(h => {
+      if (!existingColNames.includes(h.toLowerCase())) {
+        newSchema.push({
+          name: h,
+          type: "text",
+          nullable: "Yes",
+          key: ""
+        });
+      }
+    });
+
+    const updatedTables = {
+      ...currentDb.tables,
+      [targetTableName]: {
+        ...table,
+        schema: newSchema,
+        rows: [...rows, ...table.rows]
+      }
+    };
+
+    setDatabases(prev => ({
+      ...prev,
+      [activeDbId]: {
+        ...currentDb,
+        tables: updatedTables
+      }
+    }));
+
+    alert(`Successfully imported ${rows.length} rows into "${targetTableName}"!`);
   };
 
   // Sidebar navigation items
@@ -201,9 +237,9 @@ export default function App() {
 
   return (
     <div className="app-container">
-      {/* Sleek Navy Sidebar matching UI Template */}
+      {/* Warm Contemporary Studio Sidebar */}
       <aside className="sidebar">
-        {/* Brand Logo */}
+        {/* Brand Logo with Nura Typography */}
         <div 
           onClick={() => setCurrentView("landing")}
           style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "32px", cursor: "pointer", paddingLeft: "6px" }}
@@ -212,7 +248,7 @@ export default function App() {
             width: "36px", 
             height: "36px", 
             borderRadius: "10px", 
-            background: "linear-gradient(135deg, #2563eb 0%, #38bdf8 100%)", 
+            background: "linear-gradient(135deg, var(--primary-terracotta) 0%, var(--primary-terracotta-hover) 100%)", 
             display: "flex", 
             alignItems: "center", 
             justifyContent: "center", 
@@ -221,8 +257,12 @@ export default function App() {
             <Database size={20} />
           </div>
           <div className="logo-text">
-            <div style={{ fontWeight: 800, fontSize: "1.05rem", color: "#ffffff", letterSpacing: "-0.5px" }}>NEO ASSIST</div>
-            <div style={{ fontSize: "0.68rem", color: "#94a3b8" }}>Natural SQL AI</div>
+            <div className="brand-nura" style={{ fontSize: "1.15rem", color: "var(--text-espresso)", letterSpacing: "-0.5px" }}>
+              NEOASSIST
+            </div>
+            <div style={{ fontSize: "0.7rem", color: "var(--text-slate-taupe)", fontWeight: 600 }}>
+              Natural SQL Studio
+            </div>
           </div>
         </div>
 
@@ -240,52 +280,53 @@ export default function App() {
                   alignItems: "center",
                   gap: "12px",
                   padding: "10px 14px",
-                  borderRadius: "12px",
+                  borderRadius: "var(--radius-md)",
                   border: "none",
-                  background: isActive ? "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)" : "transparent",
-                  color: isActive ? "#ffffff" : "#94a3b8",
-                  fontWeight: isActive ? 700 : 500,
+                  background: isActive ? "var(--primary-terracotta)" : "transparent",
+                  color: isActive ? "#FFFFFF" : "var(--sidebar-text)",
+                  fontWeight: isActive ? 800 : 600,
                   fontSize: "0.88rem",
                   cursor: "pointer",
                   textAlign: "left",
-                  transition: "all 0.15s ease"
+                  transition: "all 0.2s cubic-bezier(0.16, 1, 0.3, 1)"
                 }}
                 onMouseEnter={(e) => {
-                  if (!isActive) e.currentTarget.style.background = "#1e293b";
+                  if (!isActive) e.currentTarget.style.background = "var(--sidebar-hover)";
                 }}
                 onMouseLeave={(e) => {
                   if (!isActive) e.currentTarget.style.background = "transparent";
                 }}
               >
-                <Icon size={18} color={isActive ? "#ffffff" : "#94a3b8"} />
+                <Icon size={18} color={isActive ? "#FFFFFF" : "var(--sidebar-text)"} />
                 <span className="nav-label">{item.label}</span>
               </button>
             );
           })}
         </nav>
 
-        {/* AI Assistant Pill Footer */}
+        {/* Studio Status Pill */}
         <div style={{ 
-          background: "#1e293b", 
-          borderRadius: "14px", 
+          background: "#FFFFFF", 
+          borderRadius: "var(--radius-md)", 
+          border: "1px solid var(--sidebar-border)",
           padding: "12px 14px", 
           marginBottom: "16px",
           display: "flex",
           alignItems: "center",
           gap: "10px"
         }}>
-          <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "rgba(37,99,235,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Cpu size={18} color="#38bdf8" />
+          <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "var(--accent-sage-light)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <ShieldCheck size={18} color="var(--accent-sage)" />
           </div>
           <div className="nav-label">
-            <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "#ffffff" }}>AI Engine Active</div>
-            <div style={{ fontSize: "0.68rem", color: "#94a3b8" }}>Gemini & In-Memory SQL</div>
+            <div style={{ fontSize: "0.78rem", fontWeight: 800, color: "var(--text-espresso)" }}>Security Enabled</div>
+            <div style={{ fontSize: "0.68rem", color: "var(--text-slate-taupe)" }}>Credentials Protected</div>
           </div>
         </div>
 
         {/* User Mini Profile */}
         <div style={{ 
-          borderTop: "1px solid #1e293b", 
+          borderTop: "1px solid var(--sidebar-border)", 
           paddingTop: "14px", 
           display: "flex", 
           alignItems: "center", 
@@ -299,19 +340,19 @@ export default function App() {
               width: "36px", 
               height: "36px", 
               borderRadius: "50%", 
-              background: "#3b82f6", 
+              background: "var(--primary-terracotta)", 
               display: "flex", 
               alignItems: "center", 
               justifyContent: "center", 
               color: "white", 
-              fontWeight: 700, 
+              fontWeight: 800, 
               fontSize: "0.85rem" 
             }}>
               G
             </div>
             <div className="user-info">
-              <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#f8fafc" }}>Gyanenderan</div>
-              <div style={{ fontSize: "0.7rem", color: "#94a3b8" }}>Sign In / Switch</div>
+              <div style={{ fontSize: "0.82rem", fontWeight: 800, color: "var(--text-espresso)" }}>Gyanenderan</div>
+              <div style={{ fontSize: "0.7rem", color: "var(--text-slate-taupe)" }}>Administrator</div>
             </div>
           </div>
         </div>
@@ -362,6 +403,7 @@ export default function App() {
             onFeedback={handleFeedback}
             savedQueries={savedQueries}
             onOpenDataStudio={() => setCurrentView("datastudio")}
+            onBulkImportSuccess={handleBulkImportSuccess}
           />
         )}
 

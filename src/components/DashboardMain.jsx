@@ -1,15 +1,13 @@
-import React, { useState } from "react";
+import React from "react";
 import { 
-  Sparkles, 
+  Terminal, 
   CheckCircle2, 
   XCircle, 
   Bookmark, 
-  Terminal, 
-  ArrowRight, 
   Mic, 
   Play, 
-  Clock,
-  TrendingUp
+  TrendingUp,
+  Inbox
 } from "lucide-react";
 import { Line } from "react-chartjs-2";
 
@@ -24,31 +22,54 @@ export const DashboardMain = ({
   isListening, 
   onQuickRun 
 }) => {
+  // Live computed counters strictly from real user activity (Page 5 requirement)
   const totalQueries = history.length;
   const successful = history.filter(h => h.success).length;
   const failed = history.filter(h => !h.success).length;
   const totalSaved = savedQueries.length;
 
-  const quickPrompts = [
-    "Show all students",
-    "Count by department",
-    "Top 5 CGPA",
-    "Show placements"
-  ];
+  // Real 7-day query grouping from actual user history timestamps
+  const getDayCounts = () => {
+    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const labels = [];
+    const counts = [0, 0, 0, 0, 0, 0, 0];
+    const now = new Date();
 
-  // Chart data for 7-day query activity
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      labels.push(days[d.getDay()]);
+    }
+
+    history.forEach(item => {
+      if (item.timestamp) {
+        const itemDate = new Date(item.timestamp);
+        const diffDays = Math.floor((now - itemDate) / (1000 * 60 * 60 * 24));
+        if (diffDays >= 0 && diffDays < 7) {
+          counts[6 - diffDays]++;
+        }
+      }
+    });
+
+    return { labels, counts };
+  };
+
+  const { labels: dayLabels, counts: dayCounts } = getDayCounts();
+
   const activityData = {
-    labels: ["Oct 24", "Oct 25", "Oct 26", "Oct 27", "Oct 28", "Oct 29", "Oct 30"],
+    labels: dayLabels,
     datasets: [
       {
-        label: "Queries Executed",
-        data: [12, 19, 15, 27, 22, 34, 42],
-        borderColor: "#2563eb",
-        backgroundColor: "rgba(37, 99, 235, 0.1)",
-        tension: 0.4,
+        label: "Real Queries Executed",
+        data: dayCounts,
+        borderColor: "#C85A32",
+        backgroundColor: "rgba(200, 90, 50, 0.08)",
+        tension: 0.35,
         fill: true,
-        pointBackgroundColor: "#2563eb",
-        pointRadius: 4
+        pointBackgroundColor: "#C85A32",
+        pointBorderColor: "#FFFFFF",
+        pointBorderWidth: 2,
+        pointRadius: 5
       }
     ]
   };
@@ -60,8 +81,12 @@ export const DashboardMain = ({
       legend: { display: false }
     },
     scales: {
-      x: { grid: { display: false }, ticks: { font: { family: "var(--font-main)" } } },
-      y: { grid: { color: "#f1f5f9" }, ticks: { font: { family: "var(--font-main)" } } }
+      x: { grid: { display: false }, ticks: { font: { family: "var(--font-main)" }, color: "#6B665E" } },
+      y: { 
+        beginAtZero: true, 
+        grid: { color: "rgba(44, 38, 29, 0.06)" }, 
+        ticks: { stepSize: 1, font: { family: "var(--font-main)" }, color: "#6B665E" } 
+      }
     }
   };
 
@@ -70,89 +95,86 @@ export const DashboardMain = ({
       {/* Welcome Header */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "12px" }}>
         <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "#0f172a" }}>
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-espresso)" }}>
             Welcome, Gyanenderan ! 👋
           </h1>
-          <p style={{ color: "#64748b", fontSize: "0.92rem", marginTop: "4px" }}>
-            Convert your questions into SQL and explore your data effortlessly.
+          <p style={{ color: "var(--text-slate-taupe)", fontSize: "0.92rem", marginTop: "4px" }}>
+            Convert natural language into accurate SQL and explore your database live.
           </p>
         </div>
-        <div style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b", background: "#ffffff", padding: "8px 16px", borderRadius: "10px", border: "1px solid #e2e8f0" }}>
-          Oct 30, 2026 &bull; Live Demo
+        <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-slate-taupe)", background: "#FFFFFF", padding: "8px 16px", borderRadius: "var(--radius-md)", border: "1px solid var(--card-border)" }}>
+          Live Session &bull; Real-Time Sync
         </div>
       </div>
 
-      {/* 4 Metric Badges matching Screen 4 */}
+      {/* 4 Metric Badges - Real computed counters */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "18px" }}>
         <div className="neo-card" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "20px" }}>
-          <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "#f3e8ff", color: "#9333ea", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "var(--primary-terracotta-light)", color: "var(--primary-terracotta)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Terminal size={24} />
           </div>
           <div>
-            <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#64748b" }}>Total Queries</div>
-            <div style={{ fontSize: "1.7rem", fontWeight: 800, color: "#0f172a" }}>{totalQueries || 124}</div>
+            <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-slate-taupe)" }}>Total Queries</div>
+            <div style={{ fontSize: "1.7rem", fontWeight: 800, color: "var(--text-espresso)" }}>{totalQueries}</div>
           </div>
         </div>
 
         <div className="neo-card" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "20px" }}>
-          <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "#dcfce7", color: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "var(--accent-sage-light)", color: "var(--accent-sage)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <CheckCircle2 size={24} />
           </div>
           <div>
-            <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#64748b" }}>Successful</div>
-            <div style={{ fontSize: "1.7rem", fontWeight: 800, color: "#0f172a" }}>{successful || 112}</div>
+            <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-slate-taupe)" }}>Successful</div>
+            <div style={{ fontSize: "1.7rem", fontWeight: 800, color: "var(--text-espresso)" }}>{successful}</div>
           </div>
         </div>
 
         <div className="neo-card" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "20px" }}>
-          <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "#fee2e2", color: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "#FEECEB", color: "#C53B34", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <XCircle size={24} />
           </div>
           <div>
-            <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#64748b" }}>Failed</div>
-            <div style={{ fontSize: "1.7rem", fontWeight: 800, color: "#0f172a" }}>{failed || 8}</div>
+            <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-slate-taupe)" }}>Failed</div>
+            <div style={{ fontSize: "1.7rem", fontWeight: 800, color: "var(--text-espresso)" }}>{failed}</div>
           </div>
         </div>
 
         <div className="neo-card" style={{ display: "flex", alignItems: "center", gap: "16px", padding: "20px" }}>
-          <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "#fef3c7", color: "#d97706", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ width: "48px", height: "48px", borderRadius: "14px", background: "var(--accent-sand-light)", color: "var(--accent-sand)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Bookmark size={24} />
           </div>
           <div>
-            <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#64748b" }}>Saved Queries</div>
-            <div style={{ fontSize: "1.7rem", fontWeight: 800, color: "#0f172a" }}>{totalSaved || 18}</div>
+            <div style={{ fontSize: "0.8rem", fontWeight: 700, color: "var(--text-slate-taupe)" }}>Saved Queries</div>
+            <div style={{ fontSize: "1.7rem", fontWeight: 800, color: "var(--text-espresso)" }}>{totalSaved}</div>
           </div>
         </div>
       </div>
 
-      {/* "Try a Query" Hero Input Box */}
-      <div className="neo-card" style={{ padding: "24px", background: "linear-gradient(135deg, #ffffff 0%, #f8faff 100%)", border: "1px solid #bfdbfe" }}>
-        <h3 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "12px", color: "#1e293b" }}>
-          Try a Query
+      {/* "Try a Query" Hero Input Box with dynamic placeholder */}
+      <div className="neo-card" style={{ padding: "24px", border: "1.5px solid rgba(200, 90, 50, 0.2)" }}>
+        <h3 style={{ fontSize: "1.1rem", fontWeight: 800, marginBottom: "12px", color: "var(--text-espresso)" }}>
+          Try a Natural Language Query
         </h3>
         <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
           <div style={{ 
             flex: 1, 
             display: "flex", 
             alignItems: "center", 
-            background: "#ffffff", 
-            border: "1.5px solid #cbd5e1", 
-            borderRadius: "14px", 
+            background: "var(--bg-cream)", 
+            border: "1.5px solid var(--card-border)", 
+            borderRadius: "var(--radius-md)", 
             padding: "4px 16px" 
           }}>
             <input
               type="text"
-              placeholder="Ask your question in natural language... (e.g. Show all students)"
+              placeholder='e.g., "Add 5 new students in AIDS department" or "Show all records where cgpa > 8.5"...'
               value={naturalQuery}
               onChange={(e) => setNaturalQuery(e.target.value)}
-              style={{ flex: 1, padding: "10px 0", border: "none", outline: "none", fontSize: "0.95rem" }}
+              style={{ flex: 1, padding: "10px 0", border: "none", outline: "none", fontSize: "0.95rem", color: "var(--text-espresso)", background: "transparent" }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") onQuickRun(naturalQuery);
               }}
             />
-            <span style={{ fontSize: "0.78rem", background: "#f1f5f9", padding: "4px 8px", borderRadius: "6px", color: "#64748b", marginRight: "8px" }}>
-              students_db
-            </span>
             <button
               type="button"
               onClick={toggleListening}
@@ -167,85 +189,65 @@ export const DashboardMain = ({
             <Play size={16} /> Run
           </button>
         </div>
-
-        {/* Quick prompt buttons */}
-        <div style={{ display: "flex", gap: "10px", marginTop: "14px", flexWrap: "wrap" }}>
-          {quickPrompts.map((p, idx) => (
-            <button
-              key={idx}
-              onClick={() => {
-                setNaturalQuery(p);
-                onQuickRun(p);
-              }}
-              style={{
-                background: "#ffffff",
-                border: "1px solid #e2e8f0",
-                padding: "6px 14px",
-                borderRadius: "20px",
-                fontSize: "0.82rem",
-                fontWeight: 600,
-                color: "#475569",
-                cursor: "pointer"
-              }}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* Grid: Recent Queries (Left) & Activity Chart (Right) */}
+      {/* Grid: Recent Queries (Left) & Live Activity Chart (Right) */}
       <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "24px" }}>
         {/* Recent queries list */}
         <div className="neo-card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#0f172a" }}>Recent Queries</h3>
-            <button 
-              onClick={() => onNavigate("history")} 
-              style={{ background: "transparent", border: "none", color: "#2563eb", fontWeight: 600, fontSize: "0.82rem", cursor: "pointer" }}
-            >
-              View All
-            </button>
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--text-espresso)" }}>Recent User Queries</h3>
+            {history.length > 0 && (
+              <button 
+                onClick={() => onNavigate("history")} 
+                style={{ background: "transparent", border: "none", color: "var(--primary-terracotta)", fontWeight: 700, fontSize: "0.82rem", cursor: "pointer" }}
+              >
+                View Full Log
+              </button>
+            )}
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {(history.length > 0 ? history.slice(0, 5) : [
-              { query: "Show all students from CSE", time: "2 min ago", type: "SELECT" },
-              { query: "Count students in each department", time: "12 min ago", type: "SELECT" },
-              { query: "Show students with CGPA > 8", time: "28 min ago", type: "SELECT" },
-              { query: "List all departments", time: "1 hour ago", type: "SELECT" }
-            ]).map((item, idx) => (
-              <div 
-                key={idx}
-                onClick={() => onQuickRun(item.query)}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  padding: "12px 14px",
-                  borderRadius: "10px",
-                  background: "#f8fafc",
-                  cursor: "pointer",
-                  transition: "background 0.15s ease"
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = "#eff6ff"}
-                onMouseLeave={(e) => e.currentTarget.style.background = "#f8fafc"}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#22c55e" }}></span>
-                  <span style={{ fontSize: "0.88rem", fontWeight: 600, color: "#1e293b" }}>{item.query}</span>
-                </div>
-                <span style={{ fontSize: "0.78rem", color: "#94a3b8" }}>{item.time || "Just now"}</span>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {history.length === 0 ? (
+              <div style={{ textAlign: "center", padding: "36px 16px", color: "var(--text-muted)" }}>
+                <Inbox size={26} style={{ display: "block", margin: "0 auto 8px auto", opacity: 0.4 }} />
+                <p style={{ fontWeight: 600, fontSize: "0.88rem" }}>No recent queries executed yet.</p>
+                <p style={{ fontSize: "0.8rem", marginTop: "2px" }}>Type or speak a question above to see real activity.</p>
               </div>
-            ))}
+            ) : (
+              history.slice(0, 5).map((item, idx) => (
+                <div 
+                  key={idx}
+                  onClick={() => onQuickRun(item.query)}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "12px 14px",
+                    borderRadius: "var(--radius-sm)",
+                    background: "var(--bg-linen)",
+                    cursor: "pointer",
+                    transition: "all 0.15s ease"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: item.success ? "var(--accent-sage)" : "#C53B34" }}></span>
+                    <span style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--text-espresso)" }}>{item.query}</span>
+                  </div>
+                  <span style={{ fontSize: "0.78rem", color: "var(--text-slate-taupe)" }}>
+                    {item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now"}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Query Activity 7 Days chart */}
+        {/* Live Query Activity 7 Days chart */}
         <div className="neo-card">
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <h3 style={{ fontSize: "1.05rem", fontWeight: 700, color: "#0f172a" }}>Query Activity (Last 7 Days)</h3>
-            <span className="badge badge-blue">Queries: 124</span>
+            <h3 style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--text-espresso)" }}>Query Activity (Last 7 Days)</h3>
+            <span className="badge badge-terracotta">Real-Time: {totalQueries} executed</span>
           </div>
           <div style={{ height: "230px" }}>
             <Line data={activityData} options={activityOptions} />

@@ -23,7 +23,7 @@ export const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
         <div style={{ textAlign: "center", marginBottom: "24px", position: "relative" }}>
           <button 
             onClick={onClose} 
-            style={{ position: "absolute", right: 0, top: 0, background: "transparent", border: "none", cursor: "pointer", color: "#94a3b8" }}
+            style={{ position: "absolute", right: 0, top: 0, background: "transparent", border: "none", cursor: "pointer", color: "var(--text-muted)" }}
           >
             <X size={20} />
           </button>
@@ -31,20 +31,20 @@ export const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
           <div style={{ 
             width: "48px", 
             height: "48px", 
-            background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)", 
+            background: "linear-gradient(135deg, var(--primary-terracotta) 0%, var(--primary-terracotta-hover) 100%)", 
             borderRadius: "14px", 
             display: "inline-flex", 
             alignItems: "center", 
             justifyContent: "center", 
             color: "white",
             marginBottom: "12px",
-            boxShadow: "0 8px 16px rgba(37, 99, 235, 0.2)"
+            boxShadow: "0 6px 16px rgba(200, 90, 50, 0.25)"
           }}>
             <Database size={24} />
           </div>
 
-          <h2 style={{ fontSize: "1.45rem", fontWeight: 800, color: "#0f172a" }}>NEO ASSIST</h2>
-          <p style={{ fontSize: "0.88rem", color: "#64748b", marginTop: "4px" }}>
+          <h2 className="brand-nura" style={{ fontSize: "1.45rem", color: "var(--text-espresso)" }}>NEOASSIST</h2>
+          <p style={{ fontSize: "0.88rem", color: "var(--text-slate-taupe)", marginTop: "4px" }}>
             {mode === "login" ? "Welcome Back! Login to continue" : "Create Your Account to get started"}
           </p>
         </div>
@@ -52,23 +52,21 @@ export const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
           {mode === "signup" && (
             <div>
-              <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, color: "#475569", marginBottom: "6px" }}>
+              <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 700, color: "var(--text-slate-taupe)", marginBottom: "6px" }}>
                 Full Name
               </label>
-              <div style={{ position: "relative" }}>
-                <input
-                  type="text"
-                  required
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }}
-                />
-              </div>
+              <input
+                type="text"
+                required
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+                style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-sm)", border: "1px solid var(--card-border)", fontSize: "0.9rem", outline: "none" }}
+              />
             </div>
           )}
 
           <div>
-            <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, color: "#475569", marginBottom: "6px" }}>
+            <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 700, color: "var(--text-slate-taupe)", marginBottom: "6px" }}>
               Email Address
             </label>
             <input
@@ -76,12 +74,12 @@ export const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }}
+              style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-sm)", border: "1px solid var(--card-border)", fontSize: "0.9rem", outline: "none" }}
             />
           </div>
 
           <div>
-            <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, color: "#475569", marginBottom: "6px" }}>
+            <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 700, color: "var(--text-slate-taupe)", marginBottom: "6px" }}>
               Password
             </label>
             <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
@@ -90,12 +88,12 @@ export const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                style={{ width: "100%", padding: "10px 40px 10px 14px", borderRadius: "10px", border: "1px solid #cbd5e1", fontSize: "0.9rem" }}
+                style={{ width: "100%", padding: "10px 40px 10px 14px", borderRadius: "var(--radius-sm)", border: "1px solid var(--card-border)", fontSize: "0.9rem", outline: "none" }}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                style={{ position: "absolute", right: "12px", background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer" }}
+                style={{ position: "absolute", right: "12px", background: "transparent", border: "none", color: "var(--text-muted)", cursor: "pointer" }}
               >
                 {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -103,11 +101,11 @@ export const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
           </div>
 
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.82rem" }}>
-            <label style={{ display: "flex", alignItems: "center", gap: "6px", color: "#64748b", cursor: "pointer" }}>
+            <label style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--text-slate-taupe)", cursor: "pointer" }}>
               <input type="checkbox" defaultChecked /> Remember me
             </label>
             {mode === "login" && (
-              <a href="#forgot" onClick={(e) => { e.preventDefault(); alert("Password reset instructions sent to your email!"); }} style={{ color: "#2563eb", textDecoration: "none", fontWeight: 600 }}>
+              <a href="#forgot" onClick={(e) => { e.preventDefault(); alert("Password reset link sent to your email!"); }} style={{ color: "var(--primary-terracotta)", textDecoration: "none", fontWeight: 700 }}>
                 Forgot password?
               </a>
             )}
@@ -119,8 +117,8 @@ export const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
         </form>
 
         <div style={{ margin: "20px 0", textAlign: "center", position: "relative" }}>
-          <div style={{ position: "absolute", top: "50%", left: 0, right: 0, height: "1px", background: "#e2e8f0" }}></div>
-          <span style={{ position: "relative", background: "#ffffff", padding: "0 12px", fontSize: "0.78rem", color: "#94a3b8" }}>
+          <div style={{ position: "absolute", top: "50%", left: 0, right: 0, height: "1px", background: "var(--card-border)" }}></div>
+          <span style={{ position: "relative", background: "#FFFFFF", padding: "0 12px", fontSize: "0.78rem", color: "var(--text-muted)" }}>
             or continue with
           </span>
         </div>
@@ -148,13 +146,13 @@ export const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
         </div>
 
         {/* Toggle Mode */}
-        <div style={{ textAlign: "center", marginTop: "20px", fontSize: "0.85rem", color: "#64748b" }}>
+        <div style={{ textAlign: "center", marginTop: "20px", fontSize: "0.85rem", color: "var(--text-slate-taupe)" }}>
           {mode === "login" ? (
             <>
               Don&apos;t have an account?{" "}
               <button 
                 onClick={() => setMode("signup")} 
-                style={{ background: "transparent", border: "none", color: "#2563eb", fontWeight: 700, cursor: "pointer" }}
+                style={{ background: "transparent", border: "none", color: "var(--primary-terracotta)", fontWeight: 800, cursor: "pointer" }}
               >
                 Create account
               </button>
@@ -164,7 +162,7 @@ export const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
               Already have an account?{" "}
               <button 
                 onClick={() => setMode("login")} 
-                style={{ background: "transparent", border: "none", color: "#2563eb", fontWeight: 700, cursor: "pointer" }}
+                style={{ background: "transparent", border: "none", color: "var(--primary-terracotta)", fontWeight: 800, cursor: "pointer" }}
               >
                 Login
               </button>

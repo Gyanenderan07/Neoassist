@@ -1,9 +1,20 @@
 import React, { useState } from "react";
-import { Mic, Plus, Trash2, Edit3, Save, Database, Layers, Sparkles } from "lucide-react";
+import { 
+  Mic, 
+  Plus, 
+  Trash2, 
+  Save, 
+  Database, 
+  Layers, 
+  Sparkles,
+  FileSpreadsheet,
+  Inbox
+} from "lucide-react";
+import { BulkImportModal } from "./BulkImportModal";
 
 export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) => {
-  const currentDb = databases[activeDbId];
-  const [selectedTable, setSelectedTable] = useState(Object.keys(currentDb.tables)[0]);
+  const currentDb = databases[activeDbId] || databases["students_db"];
+  const [selectedTable, setSelectedTable] = useState(Object.keys(currentDb.tables)[0] || "students");
   const [newRowData, setNewRowData] = useState({});
   const [activeVoiceField, setActiveVoiceField] = useState(null);
   
@@ -11,7 +22,10 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
   const [showAddContainer, setShowAddContainer] = useState(false);
   const [newContainerName, setNewContainerName] = useState("");
   const [newContainerDesc, setNewContainerDesc] = useState("");
-  const [newContainerCols, setNewContainerCols] = useState("id:int4, name:text, status:text");
+  const [newContainerCols, setNewContainerCols] = useState("id:int4, name:text, department:text");
+
+  // Bulk import modal state
+  const [showBulkImport, setShowBulkImport] = useState(false);
 
   // Web Speech recognition for individual inputs
   const triggerVoiceForField = (fieldName) => {
@@ -42,20 +56,18 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
     const table = currentDb.tables[selectedTable];
     if (!table) return;
 
-    // Check if row has at least one value
     if (Object.keys(newRowData).length === 0) {
       alert("Please fill in or speak values before inserting.");
       return;
     }
 
-    // Auto-generate numeric ID if not entered and column exists
     const rowToInsert = { ...newRowData };
     table.schema.forEach(col => {
       if (col.name === "id" && !rowToInsert.id) {
         rowToInsert.id = (table.rows.length > 0 ? Math.max(...table.rows.map(r => Number(r.id) || 0)) + 1 : 1);
       }
       if (col.type === "int4" || col.type === "numeric") {
-        if (rowToInsert[col.name] !== undefined) {
+        if (rowToInsert[col.name] !== undefined && rowToInsert[col.name] !== "") {
           rowToInsert[col.name] = Number(rowToInsert[col.name]) || rowToInsert[col.name];
         }
       }
@@ -78,7 +90,6 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
     }));
 
     setNewRowData({});
-    alert(`Success: Inserted new custom record into "${selectedTable}"!`);
   };
 
   const handleDeleteRow = (index) => {
@@ -140,6 +151,47 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
     setNewContainerDesc("");
   };
 
+  // Bulk import callback to ingest rows from Google Sheets / CSV
+  const handleBulkImportSuccess = (targetTableName, headers, rows) => {
+    const table = currentDb.tables[targetTableName];
+    if (!table) return;
+
+    // Expand schema if Google Sheet has new columns not in current table
+    const existingColNames = table.schema.map(c => c.name.toLowerCase());
+    const newSchema = [...table.schema];
+
+    headers.forEach(h => {
+      if (!existingColNames.includes(h.toLowerCase())) {
+        newSchema.push({
+          name: h,
+          type: "text",
+          nullable: "Yes",
+          key: ""
+        });
+      }
+    });
+
+    const updatedTables = {
+      ...currentDb.tables,
+      [targetTableName]: {
+        ...table,
+        schema: newSchema,
+        rows: [...rows, ...table.rows]
+      }
+    };
+
+    setDatabases(prev => ({
+      ...prev,
+      [activeDbId]: {
+        ...currentDb,
+        tables: updatedTables
+      }
+    }));
+
+    setSelectedTable(targetTableName);
+    alert(`Successfully imported ${rows.length} rows into "${targetTableName}"!`);
+  };
+
   const activeTableObj = currentDb.tables[selectedTable] || Object.values(currentDb.tables)[0];
 
   return (
@@ -147,21 +199,29 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
       {/* Header bar */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
         <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "#0f172a", display: "flex", alignItems: "center", gap: "10px" }}>
-            <Layers color="#2563eb" size={28} /> Data Insertion & Custom Containers
+          <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-espresso)", display: "flex", alignItems: "center", gap: "10px" }}>
+            <Layers color="var(--primary-terracotta)" size={28} /> Data & Containers
           </h1>
-          <p style={{ color: "#64748b", marginTop: "4px" }}>
-            Prompt 4, 5 & 6 compliance: Voice-input fields, real user-inserted records, customizable schema & tables.
+          <p style={{ color: "var(--text-slate-taupe)", marginTop: "4px" }}>
+            Real user records, voice-enabled column fields, Google Sheets bulk ingestion, and custom containers.
           </p>
         </div>
 
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+          {/* Bulk Import Button */}
+          <button 
+            className="btn-sage"
+            onClick={() => setShowBulkImport(true)}
+          >
+            <FileSpreadsheet size={16} /> Bulk Import / Google Sheets
+          </button>
+
           <button 
             className="btn-secondary"
             onClick={() => setShowAddContainer(true)}
-            style={{ borderColor: "#2563eb", color: "#2563eb" }}
+            style={{ borderColor: "rgba(200, 90, 50, 0.4)", color: "var(--primary-terracotta)" }}
           >
-            <Plus size={16} /> Add Custom Container / Table
+            <Plus size={16} /> Add Custom Container
           </button>
         </div>
       </div>
@@ -169,12 +229,16 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
       {/* Database & Table Selectors */}
       <div className="neo-card" style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center", padding: "16px 24px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <Database size={18} color="#64748b" />
-          <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>Active Database:</span>
+          <Database size={18} color="var(--text-slate-taupe)" />
+          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-slate-taupe)" }}>Active Database:</span>
           <select 
             value={activeDbId} 
-            onChange={(e) => onSwitchDb(e.target.value)}
-            style={{ padding: "8px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", fontWeight: 600 }}
+            onChange={(e) => {
+              onSwitchDb(e.target.value);
+              const nextDb = databases[e.target.value];
+              if (nextDb) setSelectedTable(Object.keys(nextDb.tables)[0] || "");
+            }}
+            style={{ padding: "8px 14px", borderRadius: "var(--radius-sm)", border: "1px solid var(--card-border)", fontWeight: 700, color: "var(--text-espresso)", background: "#FFFFFF" }}
           >
             {Object.values(databases).map(db => (
               <option key={db.id} value={db.id}>{db.name} ({Object.keys(db.tables).length} tables)</option>
@@ -182,10 +246,10 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
           </select>
         </div>
 
-        <div style={{ height: "24px", width: "1px", background: "#e2e8f0" }}></div>
+        <div style={{ height: "24px", width: "1px", background: "var(--card-border)" }}></div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
-          <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "#64748b" }}>Select Container:</span>
+          <span style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--text-slate-taupe)" }}>Select Container:</span>
           {Object.keys(currentDb.tables).map(tName => (
             <button
               key={tName}
@@ -194,11 +258,12 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
                 padding: "6px 14px",
                 borderRadius: "20px",
                 fontSize: "0.85rem",
-                fontWeight: 600,
-                border: selectedTable === tName ? "1px solid #2563eb" : "1px solid #e2e8f0",
-                background: selectedTable === tName ? "#eff6ff" : "#ffffff",
-                color: selectedTable === tName ? "#2563eb" : "#475569",
-                cursor: "pointer"
+                fontWeight: 700,
+                border: selectedTable === tName ? "1.5px solid var(--primary-terracotta)" : "1px solid var(--card-border)",
+                background: selectedTable === tName ? "var(--primary-terracotta-light)" : "#FFFFFF",
+                color: selectedTable === tName ? "var(--primary-terracotta)" : "var(--text-slate-taupe)",
+                cursor: "pointer",
+                transition: "all 0.2s ease"
               }}
             >
               {tName} ({currentDb.tables[tName].rows.length} rows)
@@ -209,17 +274,17 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
 
       {/* Voice-Enabled Data Insertion Form */}
       {activeTableObj && (
-        <div className="neo-card" style={{ borderLeft: "4px solid #2563eb" }}>
+        <div className="neo-card" style={{ borderLeft: "4px solid var(--primary-terracotta)" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
             <div>
-              <h3 style={{ fontSize: "1.1rem", fontWeight: 700, color: "#0f172a" }}>
-                Add Custom Record to &ldquo;{activeTableObj.name}&rdquo;
+              <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--text-espresso)" }}>
+                Add Record to &ldquo;{activeTableObj.name}&rdquo;
               </h3>
-              <p style={{ fontSize: "0.85rem", color: "#64748b" }}>
-                Use the microphone button next to each field to speak your data in simple English.
+              <p style={{ fontSize: "0.85rem", color: "var(--text-slate-taupe)" }}>
+                Type manually or click the microphone next to any field to speak in plain English.
               </p>
             </div>
-            <span className="badge badge-blue">
+            <span className="badge badge-terracotta">
               <Sparkles size={12} /> Voice Enabled
             </span>
           </div>
@@ -228,8 +293,8 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginBottom: "20px" }}>
               {activeTableObj.schema.map(col => (
                 <div key={col.name}>
-                  <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 600, color: "#475569", marginBottom: "6px" }}>
-                    {col.name} <span style={{ color: "#94a3b8", fontWeight: 400 }}>({col.type})</span>
+                  <label style={{ display: "block", fontSize: "0.82rem", fontWeight: 700, color: "var(--text-slate-taupe)", marginBottom: "6px" }}>
+                    {col.name} <span style={{ color: "var(--text-muted)", fontWeight: 500 }}>({col.type})</span>
                   </label>
                   <div style={{ display: "flex", gap: "6px" }}>
                     <input
@@ -240,9 +305,12 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
                       style={{
                         flex: 1,
                         padding: "10px 14px",
-                        borderRadius: "10px",
-                        border: "1px solid #cbd5e1",
-                        fontSize: "0.9rem"
+                        borderRadius: "var(--radius-sm)",
+                        border: "1px solid var(--card-border)",
+                        fontSize: "0.9rem",
+                        color: "var(--text-espresso)",
+                        background: "#FFFFFF",
+                        outline: "none"
                       }}
                     />
                     <button
@@ -259,28 +327,44 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
             </div>
 
             <button type="submit" className="btn-primary">
-              <Save size={16} /> Insert Real Record
+              <Save size={16} /> Insert Record
             </button>
           </form>
         </div>
       )}
 
-      {/* Live Table Rows Display */}
+      {/* Live Table Rows Display - Clean Empty State (Page 3 requirement) */}
       {activeTableObj && (
         <div className="neo-card" style={{ padding: 0, overflow: "hidden" }}>
-          <div style={{ padding: "18px 24px", borderBottom: "1px solid #e2e8f0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ padding: "18px 24px", borderBottom: "1px solid var(--card-border)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <h4 style={{ fontWeight: 700, fontSize: "1rem" }}>Current Records in {activeTableObj.name}</h4>
-              <p style={{ fontSize: "0.8rem", color: "#64748b" }}>Total {activeTableObj.rows.length} live records stored</p>
+              <h4 style={{ fontWeight: 800, fontSize: "1.05rem", color: "var(--text-espresso)" }}>
+                Current Records in &ldquo;{activeTableObj.name}&rdquo;
+              </h4>
+              <p style={{ fontSize: "0.82rem", color: "var(--text-slate-taupe)" }}>
+                {activeTableObj.rows.length === 0 
+                  ? "Table is currently empty" 
+                  : `${activeTableObj.rows.length} real user records stored`}
+              </p>
             </div>
+
+            {activeTableObj.rows.length === 0 && (
+              <button 
+                className="btn-sage"
+                style={{ padding: "6px 14px", fontSize: "0.82rem" }}
+                onClick={() => setShowBulkImport(true)}
+              >
+                <FileSpreadsheet size={14} /> Import Google Sheet
+              </button>
+            )}
           </div>
 
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left", fontSize: "0.88rem" }}>
-              <thead style={{ background: "#f8fafc", borderBottom: "1px solid #e2e8f0" }}>
+            <table>
+              <thead>
                 <tr>
                   {activeTableObj.schema.map(col => (
-                    <th key={col.name} style={{ padding: "12px 18px", fontWeight: 600, color: "#475569" }}>
+                    <th key={col.name} style={{ padding: "12px 18px", textAlign: "left" }}>
                       {col.name}
                     </th>
                   ))}
@@ -290,22 +374,28 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
               <tbody>
                 {activeTableObj.rows.length === 0 ? (
                   <tr>
-                    <td colSpan={activeTableObj.schema.length + 1} style={{ textAlign: "center", padding: "30px", color: "#94a3b8" }}>
-                      No data entered yet. Insert records above!
+                    <td colSpan={activeTableObj.schema.length + 1} style={{ textAlign: "center", padding: "60px 20px", color: "var(--text-muted)" }}>
+                      <Inbox size={32} style={{ display: "block", margin: "0 auto 12px auto", opacity: 0.4 }} />
+                      <p style={{ fontWeight: 700, fontSize: "1rem", color: "var(--text-espresso)" }}>
+                        No records found in this table.
+                      </p>
+                      <p style={{ fontSize: "0.85rem", color: "var(--text-slate-taupe)", marginTop: "4px" }}>
+                        Add records using natural language or bulk import.
+                      </p>
                     </td>
                   </tr>
                 ) : (
                   activeTableObj.rows.map((row, idx) => (
-                    <tr key={idx} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                    <tr key={idx}>
                       {activeTableObj.schema.map(col => (
-                        <td key={col.name} style={{ padding: "12px 18px", color: "#1e293b" }}>
+                        <td key={col.name} style={{ padding: "12px 18px", color: "var(--text-espresso)" }}>
                           {String(row[col.name] ?? "-")}
                         </td>
                       ))}
                       <td style={{ padding: "12px 18px", textAlign: "right" }}>
                         <button
                           onClick={() => handleDeleteRow(idx)}
-                          style={{ background: "transparent", border: "none", color: "#ef4444", cursor: "pointer" }}
+                          style={{ background: "transparent", border: "none", color: "#C53B34", cursor: "pointer", padding: "4px" }}
                           title="Delete row"
                         >
                           <Trash2 size={16} />
@@ -323,38 +413,38 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
       {/* Add Container Modal */}
       {showAddContainer && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ padding: "28px" }}>
-            <h3 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "8px" }}>Create New Custom Container</h3>
-            <p style={{ fontSize: "0.85rem", color: "#64748b", marginBottom: "20px" }}>
+          <div className="modal-content" style={{ padding: "30px" }}>
+            <h3 style={{ fontSize: "1.25rem", fontWeight: 800, color: "var(--text-espresso)", marginBottom: "8px" }}>Create New Custom Container</h3>
+            <p style={{ fontSize: "0.85rem", color: "var(--text-slate-taupe)", marginBottom: "20px" }}>
               Add a new table to your database. Define its name, columns, and data types.
             </p>
 
             <form onSubmit={handleCreateContainer} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "6px" }}>Container Name</label>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--text-espresso)", marginBottom: "6px" }}>Container Name</label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. course_enrollments or orders"
+                  placeholder="e.g. course_enrollments or inventory"
                   value={newContainerName}
                   onChange={(e) => setNewContainerName(e.target.value)}
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #cbd5e1" }}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-sm)", border: "1px solid var(--card-border)", outline: "none" }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "6px" }}>Description</label>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--text-espresso)", marginBottom: "6px" }}>Description</label>
                 <input
                   type="text"
                   placeholder="Short summary of this container..."
                   value={newContainerDesc}
                   onChange={(e) => setNewContainerDesc(e.target.value)}
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #cbd5e1" }}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-sm)", border: "1px solid var(--card-border)", outline: "none" }}
                 />
               </div>
 
               <div>
-                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "6px" }}>
+                <label style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, color: "var(--text-espresso)", marginBottom: "6px" }}>
                   Columns Schema (Format: colName:type, colName:type)
                 </label>
                 <input
@@ -362,9 +452,9 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
                   required
                   value={newContainerCols}
                   onChange={(e) => setNewContainerCols(e.target.value)}
-                  style={{ width: "100%", padding: "10px 14px", borderRadius: "10px", border: "1px solid #cbd5e1", fontFamily: "var(--font-mono)" }}
+                  style={{ width: "100%", padding: "10px 14px", borderRadius: "var(--radius-sm)", border: "1px solid var(--card-border)", fontFamily: "var(--font-mono)", outline: "none" }}
                 />
-                <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Supported types: int4, text, numeric, date</span>
+                <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Supported types: int4, text, numeric, date</span>
               </div>
 
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "12px" }}>
@@ -379,6 +469,15 @@ export const DataStudio = ({ databases, activeDbId, setDatabases, onSwitchDb }) 
           </div>
         </div>
       )}
+
+      {/* Bulk Import Modal Integration */}
+      <BulkImportModal
+        isOpen={showBulkImport}
+        onClose={() => setShowBulkImport(false)}
+        databases={databases}
+        activeDbId={activeDbId}
+        onImportSuccess={handleBulkImportSuccess}
+      />
     </div>
   );
 };
